@@ -1,0 +1,43 @@
+[build-system]
+requires = ["uv_build>=0.9.5,<0.10.0"]
+build-backend = "uv_build"
+
+[project]
+name = "juliet"
+version = "2.2.9"
+description = "juliet: a versatile modelling tool for transiting exoplanets, radial-velocity systems or both"
+readme = "README.md"
+requires-python = ">=3.8,<3.13"
+license = { text = "MIT" }
+authors = [ { name = "Nestor Espinoza", email = "nespinoza@stsci.edu" } ]
+urls = { Homepage = "http://github.com/nespinoza/juliet" }
+
+
+dependencies = [
+    "batman-package",
+    "radvel>=1.5.0",
+    "dynesty>=1.2.2",
+    "george",
+    "celerite",
+    "astropy",
+    "numpy",
+    "scipy",
+    "emcee",
+    "ultranest",
+    "h5py",
+    "setuptools>=75.3.2",
+]
+
+[project.scripts]
+juliet = "juliet.__main__:main"
+
+[project.optional-dependencies]
+seaborn = ["seaborn"]
+pymultinest = ["pymultinest"]
+matplotlib = ["matplotlib"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.10",
+]
+

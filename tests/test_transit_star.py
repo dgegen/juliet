@@ -56,18 +56,14 @@ jtimes["instrument"], jfluxes["instrument"], jfluxes_error["instrument"] = (
 priors = {
     "mdilution_instrument": {"distribution": "fixed", "hyperparameters": 1.0},
     "mflux_instrument": {"distribution": "normal", "hyperparameters": [0.0, 0.1]},
-    "sigma_w_instrument": {
-        "distribution": "loguniform",
-        "hyperparameters": [10.0, 1000.0],
-    },
+    "sigma_w_instrument": {"distribution": "loguniform", "hyperparameters": [1e1, 1e3]},
     "P_p1": {"distribution": "fixed", "hyperparameters": 1.0},
     "t0_p1": {"distribution": "fixed", "hyperparameters": 0.0},
     "p_p1": {"distribution": "uniform", "hyperparameters": [0, 0.2]},
+    "a_p1": {"distribution": "fixed", "hyperparameters": 3.6},
     "b_p1": {"distribution": "fixed", "hyperparameters": 0.0},
     "q1_instrument": {"distribution": "uniform", "hyperparameters": [0.0, 1.0]},
     "q2_instrument": {"distribution": "uniform", "hyperparameters": [0.0, 1.0]},
-    "r_star": {"distribution": "normal", "hyperparameters": [1.0, 0.05]},
-    "m_star": {"distribution": "normal", "hyperparameters": [1.0, 0.05]},
     "ecc_p1": {"distribution": "fixed", "hyperparameters": 0.0},
     "omega_p1": {"distribution": "fixed", "hyperparameters": 90.0},
 }
@@ -83,13 +79,7 @@ jdataset = juliet.load(
     verbose=True,
 )
 
-results = jdataset.fit(sampler="dynesty", progress=True, n_live_points=300)
-
-{
-    key: item
-    for key, item in results.posteriors["posterior_samples"].items()
-    if key != "unnamed"
-}
+results = jdataset.fit(sampler="multinest", progress=True)
 
 # Plot:
 model = results.lc.evaluate("instrument")

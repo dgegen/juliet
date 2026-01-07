@@ -1,10 +1,8 @@
 import matplotlib.pyplot as plt
-import time
 import numpy as np
 import random
 
 import juliet
-import batman
 
 random.seed(42)
 

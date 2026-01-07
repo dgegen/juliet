@@ -1,5 +1,6 @@
 # Import batman, for lightcurve models:
 import batman
+
 # Try to import catwoman:
 try:
     import catwoman
@@ -9,6 +10,7 @@ except:
 
 # Import radvel, for RV models:
 import radvel
+
 # Import george for detrending:
 try:
     import george
@@ -88,14 +90,16 @@ except:
     )
 
 # Import generic useful classes:
-import os
-import sys
+import contextlib
 import copy
-import numpy as np
+
 # Useful imports for parallelization:
 import multiprocessing as mp
+import os
+import sys
 from multiprocessing import Pool
-import contextlib
+
+import numpy as np
 
 # Define constants on the code:
 G = 6.67408e-11  # Gravitational constant, mks
@@ -926,10 +930,11 @@ class load(object):
                 else:
                     dictionary['efficient_bp'][i] = False
 
-        # Check if stellar density is in the prior:
+        # Check if stellar density is in the prior. Allow providing r_star+m_star
+        # instead of rho: if both are present we will compute rho from them.
         if dictype == 'lc':
             dictionary['fitrho'] = False
-            if 'rho' in self.priors.keys():
+            if ('rho' in self.priors.keys()) or (('r_star' in self.priors.keys()) and ('m_star' in self.priors.keys())):
                 dictionary['fitrho'] = True
 
         # For RV dictionaries, check if RV trend will be fitted:
@@ -3346,6 +3351,16 @@ class model(object):
 
         self.modelOK = True
 
+        def _get_rho(params):
+            # Allow rho either directly or computed from m_star and r_star
+            if 'rho' in params:
+                return params['rho']
+            elif ('m_star' in params) and ('r_star' in params):
+                # convert to SI using astropy constants imported in utils
+                return (params['m_star'] * const.M_sun.value) / ((4.0 / 3.0) * np.pi * (params['r_star'] * const.R_sun.value)**3)
+            else:
+                raise Exception('No stellar density (rho) or (m_star and r_star) provided in parameter_values')
+
         # If TTV parametrization is 'T' for planet i, store transit times. Check only if the noTflag is False (which implies
         # at least one planet uses the T-parametrization):
         if self.Tflag:
@@ -3566,8 +3581,8 @@ class model(object):
                             a,r1,r2   = parameter_values['a_p'+str(i)], parameter_values['r1_p'+str(i)],\
                                         parameter_values['r2_p'+str(i)]
                         else:
-                            rho,r1,r2 = parameter_values['rho'], parameter_values['r1_p'+str(i)],\
-                                        parameter_values['r2_p'+str(i)]
+                            rho = _get_rho(parameter_values)
+                            r1,r2 = parameter_values['r1_p'+str(i)], parameter_values['r2_p'+str(i)]
                             a = ((rho * G * ((P * 24. * 3600.)**2)) /
                                  (3. * np.pi))**(1. / 3.)
                         if r1 > self.Ar:
@@ -3596,12 +3611,13 @@ class model(object):
                             if not self.dictionary[instrument][
                                     'TransitFitCatwoman']:
 
-                                rho,b,p = parameter_values['rho'], parameter_values['b_p'+str(i)],\
-                                          parameter_values['p_p'+str(i) + self.p_iname['p' + str(i)][instrument]]
+                                rho = _get_rho(parameter_values)
+                                b,p = parameter_values['b_p'+str(i)], parameter_values['p_p'+str(i) + self.p_iname['p' + str(i)][instrument]]
 
                             else:
 
-                                rho,b,p1,p2,phi = parameter_values['rho'], parameter_values['b_p'+str(i)],\
+                                rho = _get_rho(parameter_values)
+                                b,p1,p2,phi = parameter_values['b_p'+str(i)], \
                                                parameter_values['p1_p'+str(i) + self.p1_iname['p' + str(i)][instrument]], \
                                                parameter_values['p2_p'+str(i) + self.p1_iname['p' + str(i)][instrument]],\
                                                parameter_values['phi_p'+str(i)]
@@ -4243,9 +4259,9 @@ class model(object):
                             len(self.instrument_indexes[instrument]))
 
                 # First, check some edge cases of user input error. First, if user decided to use a_p1 and rho, raise an error:
-                if ('a_p1' in self.priors.keys()) and ('rho' in self.priors.keys()):
+                if ('a_p1' in self.priors.keys()) and (('rho' in self.priors.keys()) or (('r_star' in self.priors.keys()) and ('m_star' in self.priors.keys()))):
 
-                    raise Exception('Priors currently define a_p1 (a/Rstar) and rho (stellar density) --- these are redundant. Please choose to fit either a_p1 or rho in your fit.')
+                    raise Exception('Priors currently define a_p1 (a/Rstar) and rho (stellar density) --- these are redundant. Please choose to fit either a_p1 or rho (or r_star+m_star) in your fit.')
 
                 # Now proceed with instrument namings:
                 for pname in self.priors.keys():

@@ -147,3 +147,6 @@ juliet/test1.py
 juliet/wasp-189_ecl_tra.dat
 juliet/test*.py
 juliet/*.dat
+
+# MacOS
+.DS_Store
