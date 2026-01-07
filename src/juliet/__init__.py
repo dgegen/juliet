@@ -1,15 +1,19 @@
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, version
 
-__all__ = ['fit', 'utils', "__version__"]
+__all__ = ["fit", "load", "model", "gaussian_process", "utils", "__version__"]
 
-from .fit import *
-from .utils import *
+import juliet.utils as utils
 
+from .fit import fit
+from .gaussian_process import gaussian_process
+from .load import load
+from .model import model
 
 try:
     # Get the version of the installed 'astra' package
-    __version__ = version("astra")
+    __version__ = version("juliet")
 except PackageNotFoundError:
-    # Fallback if the package is not installed (e.g., running from source)
-    # You might want to log a warning here or set a default
     raise RuntimeError(
+        "Package 'juliet' is not installed. "
+        "Please install it to use the package functionalities."
+    )

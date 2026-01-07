@@ -26,6 +26,7 @@ dependencies = [
     "ultranest",
     "h5py",
     "setuptools>=75.3.2",
+    "zeus-mcmc",
 ]
 
 [project.scripts]
